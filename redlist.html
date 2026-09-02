@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>个人红榜 · 在线填写</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="./config.js"></script>
   <style>
     :root {
@@ -124,14 +125,11 @@
 <body>
   <div class="wrap">
     <h1>个人红榜 · 在线填写</h1>
-    <p class="sub">按 Excel 模版字段在线提交红榜条目，所有人可查看汇总；也可下载原表格模版线下填写。</p>
+    <p class="sub">按 Excel 模版字段在线提交红榜条目，所有人可查看汇总；可一键下载当前已填写内容。</p>
 
     <div class="topbar">
-      <a
-        class="btn btn-ghost"
-        href="./templates/%E4%B8%AA%E4%BA%BA%E7%BA%A2%E6%A6%9C_%E5%B7%A5%E4%BD%9C%E6%B5%81%E8%87%AA%E5%8A%A8%E5%8C%96.xlsx"
-        download="个人红榜_工作流自动化.xlsx"
-      >下载 Excel 模版</a>
+      <button class="btn btn-ghost" type="button" id="btnDownload">下载已填写内容</button>
+      <span class="status" id="downloadStatus"></span>
     </div>
 
     <section class="panel">
@@ -237,15 +235,18 @@
       return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
     }
 
-    function renderRows(rows) {
+    function filteredRows() {
       const q = filterEl.value.trim();
-      const filtered = q
-        ? rows.filter((r) =>
-            [r.person_name, r.department, r.domain, r.project_name, r.reason]
-              .join(" ")
-              .includes(q)
-          )
-        : rows;
+      if (!q) return cache.slice();
+      return cache.filter((r) =>
+        [r.person_name, r.department, r.domain, r.project_name, r.reason]
+          .join(" ")
+          .includes(q)
+      );
+    }
+
+    function renderRows() {
+      const filtered = filteredRows();
       if (!filtered.length) {
         tbody.innerHTML = `<tr><td class="empty" colspan="9">暂无记录</td></tr>`;
         return;
@@ -263,6 +264,53 @@
           <td>${escapeHtml(r.reason)}</td>
         </tr>
       `).join("");
+    }
+
+    function downloadFilled() {
+      const downloadStatus = document.getElementById("downloadStatus");
+      const rows = filteredRows();
+      if (!rows.length) {
+        downloadStatus.textContent = "暂无已填写内容可下载";
+        downloadStatus.className = "status err";
+        return;
+      }
+      if (typeof XLSX === "undefined") {
+        downloadStatus.textContent = "导出组件未加载，请刷新重试";
+        downloadStatus.className = "status err";
+        return;
+      }
+      const sheetData = [
+        ["序号", "领域", "部门", "姓名", "项目", "行为说明", "上榜理由"]
+      ];
+      rows.forEach((r, i) => {
+        sheetData.push([
+          i + 1,
+          r.domain || "",
+          r.department || "",
+          r.person_name || "",
+          r.project_name || "",
+          r.behavior || "",
+          r.reason || ""
+        ]);
+      });
+      const ws = XLSX.utils.aoa_to_sheet(sheetData);
+      ws["!cols"] = [
+        { wch: 6 },
+        { wch: 10 },
+        { wch: 12 },
+        { wch: 10 },
+        { wch: 18 },
+        { wch: 60 },
+        { wch: 12 }
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "红榜");
+      const stamp = new Date();
+      const p = (n) => String(n).padStart(2, "0");
+      const name = `个人红榜_已填写_${stamp.getFullYear()}${p(stamp.getMonth() + 1)}${p(stamp.getDate())}_${p(stamp.getHours())}${p(stamp.getMinutes())}.xlsx`;
+      XLSX.writeFile(wb, name);
+      downloadStatus.textContent = `已导出 ${rows.length} 条`;
+      downloadStatus.className = "status ok";
     }
 
     async function loadList() {
@@ -283,7 +331,7 @@
         return;
       }
       cache = data || [];
-      renderRows(cache);
+      renderRows();
       listStatus.textContent = `共 ${cache.length} 条`;
       listStatus.className = "status ok";
     }
@@ -335,7 +383,8 @@
     });
 
     document.getElementById("btnRefresh").addEventListener("click", loadList);
-    filterEl.addEventListener("input", () => renderRows(cache));
+    document.getElementById("btnDownload").addEventListener("click", downloadFilled);
+    filterEl.addEventListener("input", () => renderRows());
 
     if (client) {
       client
