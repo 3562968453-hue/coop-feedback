@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>人员配合度反馈</title>
+  <title>研发不配合 · 污点记录</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
   <style>
     :root {
-      --bg: #f4f6f4;
-      --card: #ffffff;
-      --ink: #1a2e28;
-      --muted: #5c726a;
-      --line: #d5e0db;
-      --accent: #1f6b57;
-      --good: #1f6b57;
-      --mid: #b07a12;
-      --bad: #a33b3b;
+      --bg: #f6f3ef;
+      --card: #fffdf9;
+      --ink: #241c16;
+      --muted: #6d6258;
+      --line: #e4d9cc;
+      --accent: #8b3a2a;
+      --warn: #a56a12;
+      --mild: #6b7c4c;
+      --severe: #8b3a2a;
     }
     * { box-sizing: border-box; }
     body {
@@ -24,23 +24,33 @@
       font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
       color: var(--ink);
       background:
-        radial-gradient(900px 420px at 10% -10%, #dceee6 0%, transparent 55%),
-        radial-gradient(700px 380px at 100% 0%, #e8efe4 0%, transparent 50%),
+        radial-gradient(900px 420px at 8% -8%, #f0ddd3 0%, transparent 55%),
+        radial-gradient(700px 380px at 100% 0%, #efe6d8 0%, transparent 50%),
         var(--bg);
       min-height: 100vh;
     }
-    .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 18px 56px; }
-    h1 { margin: 0 0 6px; font-size: 1.6rem; letter-spacing: 0.02em; }
-    .sub { color: var(--muted); margin: 0 0 22px; font-size: 0.95rem; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 28px 18px 56px; }
+    h1 { margin: 0 0 6px; font-size: 1.55rem; }
+    .sub { color: var(--muted); margin: 0 0 18px; line-height: 1.5; max-width: 52rem; }
     .panel {
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 18px;
-      margin-bottom: 18px;
-      box-shadow: 0 8px 24px rgba(26, 46, 40, 0.04);
+      margin-bottom: 16px;
+      box-shadow: 0 10px 28px rgba(36, 28, 22, 0.05);
     }
-    .panel h2 { margin: 0 0 14px; font-size: 1.1rem; }
+    .panel h2 { margin: 0 0 12px; font-size: 1.08rem; }
+    .note {
+      margin: 0 0 14px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #f7ebe4;
+      border: 1px solid #ebd5ca;
+      color: #6a3d30;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
     .grid2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -55,24 +65,29 @@
       padding: 10px 12px;
       font: inherit;
       color: var(--ink);
-      background: #fbfcfb;
+      background: #fff;
     }
-    textarea { min-height: 96px; resize: vertical; }
-    .dims { display: grid; gap: 10px; margin-top: 14px; }
-    .dim {
-      display: grid;
-      grid-template-columns: 120px 1fr;
-      gap: 10px;
+    textarea { min-height: 100px; resize: vertical; }
+    .block { margin-top: 14px; }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chips label {
+      margin: 0;
+      display: inline-flex;
       align-items: center;
-      padding: 10px 12px;
+      gap: 6px;
+      padding: 7px 11px;
+      border-radius: 999px;
       border: 1px solid var(--line);
-      border-radius: 10px;
-      background: #fbfcfb;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 0.9rem;
     }
-    @media (max-width: 560px) {
-      .dim { grid-template-columns: 1fr; }
-    }
-    .dim-name { font-weight: 600; }
+    .chips input { accent-color: var(--accent); }
     .seg {
       display: inline-flex;
       gap: 8px;
@@ -83,15 +98,15 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 6px 10px;
-      border-radius: 999px;
+      padding: 8px 12px;
+      border-radius: 10px;
       border: 1px solid var(--line);
+      background: #fff;
       cursor: pointer;
       color: var(--ink);
-      background: #fff;
-      font-size: 0.9rem;
+      font-size: 0.92rem;
     }
-    .seg input { accent-color: var(--accent); }
+    .hint { color: var(--muted); font-size: 0.82rem; margin-top: 6px; }
     .actions {
       display: flex;
       gap: 10px;
@@ -107,10 +122,10 @@
       cursor: pointer;
     }
     .btn-primary { background: var(--accent); color: #fff; }
-    .btn-ghost { background: #eef3f0; color: var(--ink); }
+    .btn-ghost { background: #efe8df; color: var(--ink); }
     .status { color: var(--muted); font-size: 0.9rem; }
-    .status.ok { color: var(--good); }
-    .status.err { color: var(--bad); }
+    .status.ok { color: var(--mild); }
+    .status.err { color: var(--severe); }
     .toolbar {
       display: flex;
       gap: 10px;
@@ -119,6 +134,38 @@
       align-items: end;
     }
     .toolbar .field { min-width: 180px; flex: 1; }
+    .rank {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .rank .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+    }
+    .rank .name { font-weight: 700; }
+    .rank .meta { color: var(--muted); font-size: 0.82rem; margin-top: 4px; }
+    .rank .points {
+      margin-top: 8px;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--severe);
+    }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin: 0 4px 4px 0;
+    }
+    .tag.type { background: #efe8df; color: #5b4b3e; }
+    .tag.轻微 { background: #e8efdf; color: var(--mild); }
+    .tag.一般 { background: #f6ead0; color: var(--warn); }
+    .tag.严重 { background: #f3ddd8; color: var(--severe); }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -131,44 +178,20 @@
       vertical-align: top;
     }
     th { color: var(--muted); font-weight: 600; white-space: nowrap; }
-    .tag {
-      display: inline-block;
-      min-width: 28px;
-      text-align: center;
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: 0.82rem;
-      font-weight: 600;
-    }
-    .tag.好 { background: #e5f4ee; color: var(--good); }
-    .tag.中 { background: #f8efd9; color: var(--mid); }
-    .tag.差 { background: #f8e4e4; color: var(--bad); }
     .empty { color: var(--muted); padding: 18px 4px; }
-    .agg {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    .agg .card {
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 10px 12px;
-      background: #fbfcfb;
-    }
-    .agg .k { color: var(--muted); font-size: 0.8rem; }
-    .agg .v { font-size: 1.2rem; font-weight: 700; margin-top: 4px; }
-    .suggest { white-space: pre-wrap; max-width: 280px; }
     .scroll { overflow-x: auto; }
+    .text { white-space: pre-wrap; max-width: 280px; }
+    .pts { font-weight: 700; color: var(--severe); }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>人员配合度反馈</h1>
-    <p class="sub">点开即可填写与查看 · 实名提交 · 结果实时汇总（调试版，被评价人可自由填写）</p>
+    <h1>研发不配合 · 污点记录</h1>
+    <p class="sub">用于记录研发人员不配合事实，并按等级累计污点。点开即可填写与查看汇总（实名）。</p>
 
     <section class="panel">
-      <h2>填写反馈</h2>
+      <h2>登记一条污点</h2>
+      <p class="note">请写清「谁、什么场景、如何不配合、造成什么影响」。污点：轻微 1 分 / 一般 2 分 / 严重 3 分；同一人会在下方汇总累计。</p>
       <form id="form">
         <div class="grid2">
           <div>
@@ -176,20 +199,38 @@
             <input id="submitter" name="submitter_name" type="text" required placeholder="例如：韦安瑞" maxlength="40" />
           </div>
           <div>
-            <label for="target">被评价人</label>
-            <input id="target" name="target_name" type="text" required placeholder="自由填写姓名" maxlength="40" />
+            <label for="target">相关研发人员</label>
+            <input id="target" name="target_name" type="text" required placeholder="被记污点的人（可自由填写）" maxlength="40" />
           </div>
         </div>
 
-        <div class="dims" id="dims"></div>
+        <div class="block">
+          <label>不配合类型（可多选）</label>
+          <div class="chips" id="issueTypes"></div>
+        </div>
 
-        <div style="margin-top:14px">
-          <label for="suggestion">改进建议</label>
-          <textarea id="suggestion" name="suggestion" placeholder="写具体可改进的点…" maxlength="1000"></textarea>
+        <div class="block">
+          <label>污点等级</label>
+          <div class="seg">
+            <label><input type="radio" name="stain_level" value="轻微" /> 轻微（1 分）</label>
+            <label><input type="radio" name="stain_level" value="一般" checked /> 一般（2 分）</label>
+            <label><input type="radio" name="stain_level" value="严重" /> 严重（3 分）</label>
+          </div>
+          <div class="hint">影响小、偶发 → 轻微；反复或拖进度 → 一般；拒不配合 / 明显甩锅堵项目 → 严重</div>
+        </div>
+
+        <div class="block">
+          <label for="fact">事实经过（必填）</label>
+          <textarea id="fact" name="fact_detail" required placeholder="例如：周三联调需要他改接口，微信/会议多次催促仍未回复，导致当晚无法联调。" maxlength="2000"></textarea>
+        </div>
+
+        <div class="block">
+          <label for="suggestion">改进建议（可选）</label>
+          <textarea id="suggestion" name="suggestion" placeholder="希望对方后续如何改…" maxlength="1000"></textarea>
         </div>
 
         <div class="actions">
-          <button class="btn-primary" type="submit">提交反馈</button>
+          <button class="btn-primary" type="submit">提交污点记录</button>
           <button class="btn-ghost" type="reset">清空</button>
           <span class="status" id="formStatus"></span>
         </div>
@@ -197,33 +238,32 @@
     </section>
 
     <section class="panel">
-      <h2>汇总表</h2>
+      <h2>按人累计污点</h2>
+      <div class="rank" id="rank"></div>
       <div class="toolbar">
         <div class="field">
-          <label for="filterTarget">按被评价人筛选</label>
+          <label for="filterTarget">按人员筛选明细</label>
           <input id="filterTarget" type="text" placeholder="留空显示全部" />
         </div>
         <button class="btn-ghost" type="button" id="btnRefresh">刷新</button>
         <span class="status" id="listStatus"></span>
       </div>
-      <div class="agg" id="agg"></div>
       <div class="scroll">
         <table>
           <thead>
             <tr>
               <th>时间</th>
               <th>填写人</th>
-              <th>被评价人</th>
-              <th>响应速度</th>
-              <th>沟通配合</th>
-              <th>任务闭环</th>
-              <th>主动性</th>
-              <th>交付准时</th>
+              <th>研发人员</th>
+              <th>类型</th>
+              <th>等级</th>
+              <th>污点</th>
+              <th>事实经过</th>
               <th>改进建议</th>
             </tr>
           </thead>
           <tbody id="tbody">
-            <tr><td class="empty" colspan="9">加载中…</td></tr>
+            <tr><td class="empty" colspan="8">加载中…</td></tr>
           </tbody>
         </table>
       </div>
@@ -231,45 +271,40 @@
   </div>
 
   <script>
-    const DIMS = [
-      { key: "resp_speed", label: "响应速度" },
-      { key: "communication", label: "沟通配合" },
-      { key: "closure", label: "任务闭环" },
-      { key: "initiative", label: "主动性" },
-      { key: "punctuality", label: "交付准时" }
+    const ISSUE_TYPES = [
+      "响应慢/不回",
+      "推诿扯皮",
+      "交付拖延",
+      "信息不透明",
+      "联调不配合",
+      "拒不配合",
+      "其他"
     ];
-    const LEVELS = ["好", "中", "差"];
+    const LEVEL_POINTS = { "轻微": 1, "一般": 2, "严重": 3 };
 
     const cfg = window.FEEDBACK_CONFIG || {};
-    const ready = cfg.supabaseUrl && cfg.supabaseAnonKey;
-    const client = ready
+    const client = (cfg.supabaseUrl && cfg.supabaseAnonKey)
       ? window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey)
       : null;
 
-    const dimsEl = document.getElementById("dims");
-    dimsEl.innerHTML = DIMS.map((d) => `
-      <div class="dim">
-        <div class="dim-name">${d.label}</div>
-        <div class="seg">
-          ${LEVELS.map((lv, i) => `
-            <label>
-              <input type="radio" name="${d.key}" value="${lv}" ${i === 1 ? "checked" : ""} required />
-              ${lv}
-            </label>
-          `).join("")}
-        </div>
-      </div>
+    const issueTypesEl = document.getElementById("issueTypes");
+    issueTypesEl.innerHTML = ISSUE_TYPES.map((t) => `
+      <label><input type="checkbox" name="issue_type" value="${t}" /> ${t}</label>
     `).join("");
 
     const form = document.getElementById("form");
     const formStatus = document.getElementById("formStatus");
     const listStatus = document.getElementById("listStatus");
     const tbody = document.getElementById("tbody");
-    const agg = document.getElementById("agg");
+    const rank = document.getElementById("rank");
     const filterTarget = document.getElementById("filterTarget");
 
-    function tag(v) {
-      return `<span class="tag ${v}">${v}</span>`;
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
     }
 
     function fmtTime(iso) {
@@ -279,55 +314,53 @@
       return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
     }
 
-    function scoreOf(v) {
-      return v === "好" ? 3 : v === "中" ? 2 : 1;
-    }
-
-    function renderAgg(rows) {
-      if (!rows.length) {
-        agg.innerHTML = "";
+    function renderRank(rows) {
+      const map = new Map();
+      for (const r of rows) {
+        const name = r.target_name || "未命名";
+        const cur = map.get(name) || { name, points: 0, count: 0, severe: 0 };
+        cur.points += Number(r.stain_points) || 0;
+        cur.count += 1;
+        if (r.stain_level === "严重") cur.severe += 1;
+        map.set(name, cur);
+      }
+      const list = [...map.values()].sort((a, b) => b.points - a.points || b.count - a.count);
+      if (!list.length) {
+        rank.innerHTML = `<div class="card"><div class="meta">暂无累计污点</div></div>`;
         return;
       }
-      const n = rows.length;
-      const avg = (key) => (rows.reduce((s, r) => s + scoreOf(r[key]), 0) / n).toFixed(2);
-      const cards = [
-        ["反馈条数", String(n)],
-        ...DIMS.map((d) => [d.label + "均分", avg(d.key) + " / 3"])
-      ];
-      agg.innerHTML = cards.map(([k, v]) => `
-        <div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>
+      rank.innerHTML = list.map((p) => `
+        <div class="card">
+          <div class="name">${escapeHtml(p.name)}</div>
+          <div class="meta">${p.count} 条记录 · 严重 ${p.severe} 次</div>
+          <div class="points">${p.points} 分污点</div>
+        </div>
       `).join("");
     }
 
     function renderRows(rows) {
       const q = filterTarget.value.trim();
       const filtered = q ? rows.filter((r) => (r.target_name || "").includes(q)) : rows;
-      renderAgg(filtered);
+      renderRank(rows);
       if (!filtered.length) {
-        tbody.innerHTML = `<tr><td class="empty" colspan="9">暂无数据</td></tr>`;
+        tbody.innerHTML = `<tr><td class="empty" colspan="8">暂无记录</td></tr>`;
         return;
       }
-      tbody.innerHTML = filtered.map((r) => `
-        <tr>
-          <td>${fmtTime(r.created_at)}</td>
-          <td>${escapeHtml(r.submitter_name)}</td>
-          <td>${escapeHtml(r.target_name)}</td>
-          <td>${tag(r.resp_speed)}</td>
-          <td>${tag(r.communication)}</td>
-          <td>${tag(r.closure)}</td>
-          <td>${tag(r.initiative)}</td>
-          <td>${tag(r.punctuality)}</td>
-          <td class="suggest">${escapeHtml(r.suggestion || "")}</td>
-        </tr>
-      `).join("");
-    }
-
-    function escapeHtml(s) {
-      return String(s)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;");
+      tbody.innerHTML = filtered.map((r) => {
+        const types = (r.issue_types || []).map((t) => `<span class="tag type">${escapeHtml(t)}</span>`).join("");
+        return `
+          <tr>
+            <td>${fmtTime(r.created_at)}</td>
+            <td>${escapeHtml(r.submitter_name)}</td>
+            <td>${escapeHtml(r.target_name)}</td>
+            <td>${types || "-"}</td>
+            <td><span class="tag ${r.stain_level}">${r.stain_level}</span></td>
+            <td class="pts">${r.stain_points}</td>
+            <td class="text">${escapeHtml(r.fact_detail || "")}</td>
+            <td class="text">${escapeHtml(r.suggestion || "")}</td>
+          </tr>
+        `;
+      }).join("");
     }
 
     let cache = [];
@@ -363,18 +396,29 @@
         return;
       }
       const fd = new FormData(form);
+      const types = [...form.querySelectorAll('input[name="issue_type"]:checked')].map((el) => el.value);
+      const level = String(fd.get("stain_level") || "");
       const payload = {
         submitter_name: String(fd.get("submitter_name") || "").trim(),
         target_name: String(fd.get("target_name") || "").trim(),
-        resp_speed: fd.get("resp_speed"),
-        communication: fd.get("communication"),
-        closure: fd.get("closure"),
-        initiative: fd.get("initiative"),
-        punctuality: fd.get("punctuality"),
+        issue_types: types,
+        stain_level: level,
+        stain_points: LEVEL_POINTS[level] || 2,
+        fact_detail: String(fd.get("fact_detail") || "").trim(),
         suggestion: String(fd.get("suggestion") || "").trim()
       };
       if (!payload.submitter_name || !payload.target_name) {
         formStatus.textContent = "请填写姓名";
+        formStatus.className = "status err";
+        return;
+      }
+      if (!types.length) {
+        formStatus.textContent = "请至少选择一种不配合类型";
+        formStatus.className = "status err";
+        return;
+      }
+      if (!payload.fact_detail) {
+        formStatus.textContent = "请填写事实经过";
         formStatus.className = "status err";
         return;
       }
@@ -386,14 +430,11 @@
         formStatus.className = "status err";
         return;
       }
-      formStatus.textContent = "提交成功";
+      formStatus.textContent = "已记入污点";
       formStatus.className = "status ok";
       form.reset();
-      // restore default mid ratings
-      DIMS.forEach((d) => {
-        const mid = form.querySelector(`input[name="${d.key}"][value="中"]`);
-        if (mid) mid.checked = true;
-      });
+      const mid = form.querySelector('input[name="stain_level"][value="一般"]');
+      if (mid) mid.checked = true;
       await loadList();
     });
 

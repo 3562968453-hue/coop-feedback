@@ -1,19 +1,21 @@
--- 人员配合度反馈（免登录可读写）
-create table if not exists public.coop_feedback (
+-- 研发不配合污点反馈（免登录可读写）
+drop table if exists public.coop_feedback cascade;
+
+create table public.coop_feedback (
   id uuid primary key default gen_random_uuid(),
   submitter_name text not null,
   target_name text not null,
-  resp_speed text not null check (resp_speed in ('好', '中', '差')),
-  communication text not null check (communication in ('好', '中', '差')),
-  closure text not null check (closure in ('好', '中', '差')),
-  initiative text not null check (initiative in ('好', '中', '差')),
-  punctuality text not null check (punctuality in ('好', '中', '差')),
+  issue_types text[] not null default '{}',
+  stain_level text not null check (stain_level in ('轻微', '一般', '严重')),
+  stain_points int not null check (stain_points in (1, 2, 3)),
+  fact_detail text not null,
   suggestion text not null default '',
   created_at timestamptz not null default now()
 );
 
 create index if not exists idx_coop_feedback_created on public.coop_feedback (created_at desc);
 create index if not exists idx_coop_feedback_target on public.coop_feedback (target_name);
+create index if not exists idx_coop_feedback_points on public.coop_feedback (stain_points desc);
 
 alter table public.coop_feedback enable row level security;
 
