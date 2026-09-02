@@ -114,12 +114,14 @@
       margin-top: 16px;
       align-items: center;
     }
-    button {
+    button, a.btn-ghost, a.btn-primary {
       border: 0;
       border-radius: 10px;
       padding: 10px 16px;
       font: inherit;
       cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
     }
     .btn-primary { background: var(--accent); color: #fff; }
     .btn-ghost { background: #efe8df; color: var(--ink); }
@@ -188,6 +190,9 @@
   <div class="wrap">
     <h1>研发不配合 · 污点记录</h1>
     <p class="sub">用于记录研发人员不配合事实，并按等级累计污点。点开即可填写与查看汇总（实名）。</p>
+    <div class="actions" style="margin:0 0 16px">
+      <a class="btn-ghost" href="./templates/%E4%B8%AA%E4%BA%BA%E7%BA%A2%E6%A6%9C_%E5%B7%A5%E4%BD%9C%E6%B5%81%E8%87%AA%E5%8A%A8%E5%8C%96.xlsx" download="个人红榜_工作流自动化.xlsx">下载红榜表格模版</a>
+    </div>
 
     <section class="panel">
       <h2>登记一条污点</h2>
