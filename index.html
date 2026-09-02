@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>人员配合度反馈</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <style>
+    :root {
+      --bg: #f4f6f4;
+      --card: #ffffff;
+      --ink: #1a2e28;
+      --muted: #5c726a;
+      --line: #d5e0db;
+      --accent: #1f6b57;
+      --good: #1f6b57;
+      --mid: #b07a12;
+      --bad: #a33b3b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(900px 420px at 10% -10%, #dceee6 0%, transparent 55%),
+        radial-gradient(700px 380px at 100% 0%, #e8efe4 0%, transparent 50%),
+        var(--bg);
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 18px 56px; }
+    h1 { margin: 0 0 6px; font-size: 1.6rem; letter-spacing: 0.02em; }
+    .sub { color: var(--muted); margin: 0 0 22px; font-size: 0.95rem; }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 8px 24px rgba(26, 46, 40, 0.04);
+    }
+    .panel h2 { margin: 0 0 14px; font-size: 1.1rem; }
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } }
+    label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
+    input[type="text"], textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+      color: var(--ink);
+      background: #fbfcfb;
+    }
+    textarea { min-height: 96px; resize: vertical; }
+    .dims { display: grid; gap: 10px; margin-top: 14px; }
+    .dim {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fbfcfb;
+    }
+    @media (max-width: 560px) {
+      .dim { grid-template-columns: 1fr; }
+    }
+    .dim-name { font-weight: 600; }
+    .seg {
+      display: inline-flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .seg label {
+      margin: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      cursor: pointer;
+      color: var(--ink);
+      background: #fff;
+      font-size: 0.9rem;
+    }
+    .seg input { accent-color: var(--accent); }
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      align-items: center;
+    }
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font: inherit;
+      cursor: pointer;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-ghost { background: #eef3f0; color: var(--ink); }
+    .status { color: var(--muted); font-size: 0.9rem; }
+    .status.ok { color: var(--good); }
+    .status.err { color: var(--bad); }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+      align-items: end;
+    }
+    .toolbar .field { min-width: 180px; flex: 1; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { color: var(--muted); font-weight: 600; white-space: nowrap; }
+    .tag {
+      display: inline-block;
+      min-width: 28px;
+      text-align: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+    .tag.好 { background: #e5f4ee; color: var(--good); }
+    .tag.中 { background: #f8efd9; color: var(--mid); }
+    .tag.差 { background: #f8e4e4; color: var(--bad); }
+    .empty { color: var(--muted); padding: 18px 4px; }
+    .agg {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .agg .card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #fbfcfb;
+    }
+    .agg .k { color: var(--muted); font-size: 0.8rem; }
+    .agg .v { font-size: 1.2rem; font-weight: 700; margin-top: 4px; }
+    .suggest { white-space: pre-wrap; max-width: 280px; }
+    .scroll { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>人员配合度反馈</h1>
+    <p class="sub">点开即可填写与查看 · 实名提交 · 结果实时汇总（调试版，被评价人可自由填写）</p>
+
+    <section class="panel">
+      <h2>填写反馈</h2>
+      <form id="form">
+        <div class="grid2">
+          <div>
+            <label for="submitter">填写人（实名）</label>
+            <input id="submitter" name="submitter_name" type="text" required placeholder="例如：韦安瑞" maxlength="40" />
+          </div>
+          <div>
+            <label for="target">被评价人</label>
+            <input id="target" name="target_name" type="text" required placeholder="自由填写姓名" maxlength="40" />
+          </div>
+        </div>
+
+        <div class="dims" id="dims"></div>
+
+        <div style="margin-top:14px">
+          <label for="suggestion">改进建议</label>
+          <textarea id="suggestion" name="suggestion" placeholder="写具体可改进的点…" maxlength="1000"></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary" type="submit">提交反馈</button>
+          <button class="btn-ghost" type="reset">清空</button>
+          <span class="status" id="formStatus"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>汇总表</h2>
+      <div class="toolbar">
+        <div class="field">
+          <label for="filterTarget">按被评价人筛选</label>
+          <input id="filterTarget" type="text" placeholder="留空显示全部" />
+        </div>
+        <button class="btn-ghost" type="button" id="btnRefresh">刷新</button>
+        <span class="status" id="listStatus"></span>
+      </div>
+      <div class="agg" id="agg"></div>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>时间</th>
+              <th>填写人</th>
+              <th>被评价人</th>
+              <th>响应速度</th>
+              <th>沟通配合</th>
+              <th>任务闭环</th>
+              <th>主动性</th>
+              <th>交付准时</th>
+              <th>改进建议</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td class="empty" colspan="9">加载中…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const DIMS = [
+      { key: "resp_speed", label: "响应速度" },
+      { key: "communication", label: "沟通配合" },
+      { key: "closure", label: "任务闭环" },
+      { key: "initiative", label: "主动性" },
+      { key: "punctuality", label: "交付准时" }
+    ];
+    const LEVELS = ["好", "中", "差"];
+
+    const cfg = window.FEEDBACK_CONFIG || {};
+    const ready = cfg.supabaseUrl && cfg.supabaseAnonKey;
+    const client = ready
+      ? window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey)
+      : null;
+
+    const dimsEl = document.getElementById("dims");
+    dimsEl.innerHTML = DIMS.map((d) => `
+      <div class="dim">
+        <div class="dim-name">${d.label}</div>
+        <div class="seg">
+          ${LEVELS.map((lv, i) => `
+            <label>
+              <input type="radio" name="${d.key}" value="${lv}" ${i === 1 ? "checked" : ""} required />
+              ${lv}
+            </label>
+          `).join("")}
+        </div>
+      </div>
+    `).join("");
+
+    const form = document.getElementById("form");
+    const formStatus = document.getElementById("formStatus");
+    const listStatus = document.getElementById("listStatus");
+    const tbody = document.getElementById("tbody");
+    const agg = document.getElementById("agg");
+    const filterTarget = document.getElementById("filterTarget");
+
+    function tag(v) {
+      return `<span class="tag ${v}">${v}</span>`;
+    }
+
+    function fmtTime(iso) {
+      if (!iso) return "";
+      const d = new Date(iso);
+      const p = (n) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+    }
+
+    function scoreOf(v) {
+      return v === "好" ? 3 : v === "中" ? 2 : 1;
+    }
+
+    function renderAgg(rows) {
+      if (!rows.length) {
+        agg.innerHTML = "";
+        return;
+      }
+      const n = rows.length;
+      const avg = (key) => (rows.reduce((s, r) => s + scoreOf(r[key]), 0) / n).toFixed(2);
+      const cards = [
+        ["反馈条数", String(n)],
+        ...DIMS.map((d) => [d.label + "均分", avg(d.key) + " / 3"])
+      ];
+      agg.innerHTML = cards.map(([k, v]) => `
+        <div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>
+      `).join("");
+    }
+
+    function renderRows(rows) {
+      const q = filterTarget.value.trim();
+      const filtered = q ? rows.filter((r) => (r.target_name || "").includes(q)) : rows;
+      renderAgg(filtered);
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td class="empty" colspan="9">暂无数据</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = filtered.map((r) => `
+        <tr>
+          <td>${fmtTime(r.created_at)}</td>
+          <td>${escapeHtml(r.submitter_name)}</td>
+          <td>${escapeHtml(r.target_name)}</td>
+          <td>${tag(r.resp_speed)}</td>
+          <td>${tag(r.communication)}</td>
+          <td>${tag(r.closure)}</td>
+          <td>${tag(r.initiative)}</td>
+          <td>${tag(r.punctuality)}</td>
+          <td class="suggest">${escapeHtml(r.suggestion || "")}</td>
+        </tr>
+      `).join("");
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    let cache = [];
+
+    async function loadList() {
+      if (!client) {
+        listStatus.textContent = "缺少 config.js 配置";
+        listStatus.className = "status err";
+        return;
+      }
+      listStatus.textContent = "加载中…";
+      listStatus.className = "status";
+      const { data, error } = await client
+        .from("coop_feedback")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) {
+        listStatus.textContent = "加载失败：" + error.message;
+        listStatus.className = "status err";
+        return;
+      }
+      cache = data || [];
+      renderRows(cache);
+      listStatus.textContent = `共 ${cache.length} 条`;
+      listStatus.className = "status ok";
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!client) {
+        formStatus.textContent = "缺少 config.js 配置";
+        formStatus.className = "status err";
+        return;
+      }
+      const fd = new FormData(form);
+      const payload = {
+        submitter_name: String(fd.get("submitter_name") || "").trim(),
+        target_name: String(fd.get("target_name") || "").trim(),
+        resp_speed: fd.get("resp_speed"),
+        communication: fd.get("communication"),
+        closure: fd.get("closure"),
+        initiative: fd.get("initiative"),
+        punctuality: fd.get("punctuality"),
+        suggestion: String(fd.get("suggestion") || "").trim()
+      };
+      if (!payload.submitter_name || !payload.target_name) {
+        formStatus.textContent = "请填写姓名";
+        formStatus.className = "status err";
+        return;
+      }
+      formStatus.textContent = "提交中…";
+      formStatus.className = "status";
+      const { error } = await client.from("coop_feedback").insert(payload);
+      if (error) {
+        formStatus.textContent = "提交失败：" + error.message;
+        formStatus.className = "status err";
+        return;
+      }
+      formStatus.textContent = "提交成功";
+      formStatus.className = "status ok";
+      form.reset();
+      // restore default mid ratings
+      DIMS.forEach((d) => {
+        const mid = form.querySelector(`input[name="${d.key}"][value="中"]`);
+        if (mid) mid.checked = true;
+      });
+      await loadList();
+    });
+
+    document.getElementById("btnRefresh").addEventListener("click", loadList);
+    filterTarget.addEventListener("input", () => renderRows(cache));
+
+    if (client) {
+      client
+        .channel("coop_feedback_live")
+        .on("postgres_changes", { event: "*", schema: "public", table: "coop_feedback" }, () => loadList())
+        .subscribe();
+    }
+
+    loadList();
+  </script>
+</body>
+</html>

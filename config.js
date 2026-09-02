@@ -1,0 +1,4 @@
+window.FEEDBACK_CONFIG = {
+  supabaseUrl: "https://qaapufwifnfdpzzaimle.supabase.co",
+  supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFhYXB1ZndpZm5mZHB6emFpbWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4OTcyNjMsImV4cCI6MjEwMzQ3MzI2M30.wvyPpW7Y8u-BLfGwRTeXs0_tD_7FvXoSrg4FU6fd99U"
+};
