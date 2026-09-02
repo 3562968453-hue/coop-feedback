@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>个人红榜 · 工作流自动化模版</title>
+  <style>
+    :root {
+      --bg: #f3f1ec;
+      --card: #fffcf7;
+      --ink: #1f1a14;
+      --muted: #6a5f54;
+      --line: #e2d7c8;
+      --accent: #9a3f28;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(800px 360px at 12% -10%, #f0d9cf 0%, transparent 55%),
+        radial-gradient(680px 320px at 100% 0%, #ebe3d4 0%, transparent 50%),
+        var(--bg);
+    }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 36px 18px 64px; }
+    .nav { margin-bottom: 18px; }
+    .nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.92rem;
+    }
+    .nav a:hover { color: var(--accent); }
+    h1 { margin: 0 0 8px; font-size: 1.55rem; }
+    .sub { margin: 0 0 22px; color: var(--muted); line-height: 1.55; }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 10px 28px rgba(31, 26, 20, 0.05);
+    }
+    .panel h2 { margin: 0 0 10px; font-size: 1.08rem; }
+    .desc {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+    .btn {
+      display: inline-block;
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font: inherit;
+      text-decoration: none;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+    }
+    .btn:hover { filter: brightness(1.05); }
+    .meta {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="nav">
+      <a href="./index.html">← 返回污点记录</a>
+    </div>
+    <h1>个人红榜 · 工作流自动化</h1>
+    <p class="sub">下载表格模版，按模版填写红榜 / 工作流自动化内容。</p>
+
+    <section class="panel">
+      <h2>表格模版</h2>
+      <p class="desc">文件来源：个人红榜_韦安瑞_工作流自动化.xlsx。点击下方按钮即可下载到本地。</p>
+      <a
+        class="btn"
+        href="./templates/%E4%B8%AA%E4%BA%BA%E7%BA%A2%E6%A6%9C_%E5%B7%A5%E4%BD%9C%E6%B5%81%E8%87%AA%E5%8A%A8%E5%8C%96.xlsx"
+        download="个人红榜_工作流自动化.xlsx"
+      >下载红榜表格模版</a>
+      <div class="meta">路径：templates/个人红榜_工作流自动化.xlsx</div>
+    </section>
+  </div>
+</body>
+</html>
