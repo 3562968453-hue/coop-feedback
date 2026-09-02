@@ -18,4 +18,4 @@
 ## 页面
 
 - `index.html`：污点记录
-- `redlist.html`：个人红榜表格模版下载
+- `redlist.html`：个人红榜在线填写 + Excel 模版下载
